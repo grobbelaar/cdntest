@@ -6,7 +6,7 @@
 
 ```bash
 npm install
-npx playwright install
+npx playwright install-deps && npx playwright install
 ```
 
 ### Windows
@@ -16,7 +16,7 @@ npx playwright install
 
 ```powershell
 npm install
-npx playwright install
+npx playwright install-deps && npx playwright install
 node bin/bench.js run
 ```
 
