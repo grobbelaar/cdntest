@@ -7,4 +7,3 @@ urls.txt
 *.zip
 .env
 .env.*
-!.env.example
