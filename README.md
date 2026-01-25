@@ -142,15 +142,25 @@ timestamp,page_id,variant,run,images_ms,avg_img_ms,ttfb_ms,...
 
 ```json
 {
-  "s3_bucket": "bucket-name",
-  "s3_endpoint": "storage.yandexcloud.net",
-  "s3_access_key_id": "...",
-  "s3_secret_access_key": "...",
   "city": "Moscow"
 }
 ```
+S3 параметры и другие чувствительные значения выносятся в `.env`.
 
-Для Yandex Object Storage: `s3_endpoint=storage.yandexcloud.net`, регион определяется автоматически.
+### .env (секреты/хосты/пути)
+
+Для чувствительных значений используется `.env` (файл не коммитится). Пример: `.env.example`.
+
+Поддерживаемые переменные:
+
+- `CDNTEST_BASE_URL`
+- `CDNTEST_OUTPUT_DIR`
+- `CDNTEST_S3_BUCKET`
+- `CDNTEST_S3_PREFIX`
+- `CDNTEST_S3_ENDPOINT`
+- `CDNTEST_S3_REGION`
+- `CDNTEST_S3_ACCESS_KEY_ID`
+- `CDNTEST_S3_SECRET_ACCESS_KEY`
 
 ---
 

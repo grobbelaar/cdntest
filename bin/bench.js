@@ -16,6 +16,7 @@ const {
   cacheBustToken,
   appendCacheBust,
   parseHostPatterns,
+  loadEnvFile,
   formatMs,
   mean,
   percentile,
@@ -27,6 +28,9 @@ const { withRetries, hasCliArg } = require("../lib/utils");
 const { detectCity } = require("../lib/geo");
 const { runSingle, runImageSingle, runWarmup } = require("../lib/browser");
 const { saveReport, computeImageStats } = require("../lib/report");
+
+const ENV_FILE = process.env.CDNTEST_ENV_FILE || ".env";
+loadEnvFile(ENV_FILE);
 
 // Constants
 const PAGES = ["page1", "page2", "page3"];
@@ -93,24 +97,48 @@ function shuffle(array) {
 // ============ RUN COMMAND ============
 async function cmdRun(args) {
   const config = await loadConfig(args.config);
-  const baseUrl = normalizeBaseUrl(args["base-url"]);
+  const envBaseUrl = toNonEmptyString(process.env.CDNTEST_BASE_URL);
+  const baseUrl = normalizeBaseUrl(
+    hasCliArg("base-url") ? args["base-url"] : envBaseUrl || args["base-url"]
+  );
   const repeats = Number(args.repeats);
   const browserName = args.browser;
   const headless = parseBool(args.headless);
   const timeoutMs = Number(args["timeout-ms"]) || 60000;
-  const outputDir = args["output-dir"];
+  const envOutputDir = toNonEmptyString(process.env.CDNTEST_OUTPUT_DIR);
+  const outputDir = hasCliArg("output-dir")
+    ? args["output-dir"]
+    : envOutputDir || args["output-dir"];
   const delayMs = Number(args["delay-ms"]) || 1000;
   const scrollDelayMs = Number(args["scroll-delay-ms"]) || 0;
   const verbose = parseBool(args.verbose);
   const allowedImageHosts = parseHostPatterns(args["image-hosts"]);
 
   // S3 config
-  const s3Bucket = hasCliArg("s3-bucket") ? toNonEmptyString(args["s3-bucket"]) : toNonEmptyString(config.s3_bucket);
-  const s3Prefix = hasCliArg("s3-prefix") ? toNonEmptyString(args["s3-prefix"]) : toNonEmptyString(config.s3_prefix);
-  const s3Endpoint = hasCliArg("s3-endpoint") ? toNonEmptyString(args["s3-endpoint"]) : toNonEmptyString(config.s3_endpoint);
-  const s3Region = hasCliArg("s3-region") ? toNonEmptyString(args["s3-region"]) : toNonEmptyString(config.s3_region) || defaultS3Region(s3Endpoint);
-  const s3AccessKeyId = hasCliArg("s3-access-key-id") ? toNonEmptyString(args["s3-access-key-id"]) : toNonEmptyString(config.s3_access_key_id);
-  const s3SecretAccessKey = hasCliArg("s3-secret-access-key") ? toNonEmptyString(args["s3-secret-access-key"]) : toNonEmptyString(config.s3_secret_access_key);
+  const envS3Bucket = toNonEmptyString(process.env.CDNTEST_S3_BUCKET);
+  const envS3Prefix = toNonEmptyString(process.env.CDNTEST_S3_PREFIX);
+  const envS3Endpoint = toNonEmptyString(process.env.CDNTEST_S3_ENDPOINT);
+  const envS3Region = toNonEmptyString(process.env.CDNTEST_S3_REGION);
+  const envS3AccessKeyId = toNonEmptyString(process.env.CDNTEST_S3_ACCESS_KEY_ID);
+  const envS3SecretAccessKey = toNonEmptyString(process.env.CDNTEST_S3_SECRET_ACCESS_KEY);
+  const s3Bucket = hasCliArg("s3-bucket")
+    ? toNonEmptyString(args["s3-bucket"])
+    : envS3Bucket || toNonEmptyString(config.s3_bucket);
+  const s3Prefix = hasCliArg("s3-prefix")
+    ? toNonEmptyString(args["s3-prefix"])
+    : envS3Prefix || toNonEmptyString(config.s3_prefix);
+  const s3Endpoint = hasCliArg("s3-endpoint")
+    ? toNonEmptyString(args["s3-endpoint"])
+    : envS3Endpoint || toNonEmptyString(config.s3_endpoint);
+  const s3Region = hasCliArg("s3-region")
+    ? toNonEmptyString(args["s3-region"])
+    : envS3Region || toNonEmptyString(config.s3_region) || defaultS3Region(s3Endpoint);
+  const s3AccessKeyId = hasCliArg("s3-access-key-id")
+    ? toNonEmptyString(args["s3-access-key-id"])
+    : envS3AccessKeyId || toNonEmptyString(config.s3_access_key_id);
+  const s3SecretAccessKey = hasCliArg("s3-secret-access-key")
+    ? toNonEmptyString(args["s3-secret-access-key"])
+    : envS3SecretAccessKey || toNonEmptyString(config.s3_secret_access_key);
 
   // Geo detection
   const autoCity = parseBool(args["auto-city"]);

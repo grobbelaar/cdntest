@@ -5,3 +5,6 @@ results/
 urls.txt
 .idea
 *.zip
+.env
+.env.*
+!.env.example
