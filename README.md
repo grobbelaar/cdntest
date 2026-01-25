@@ -98,7 +98,7 @@ node bin/bench.js urls --urls https://example.com/urls.txt
 
 | Опция | Default | Описание |
 |-------|---------|----------|
-| `--repeats` | 3 | Количество повторов на вариант |
+| `--repeats` | 100 | Количество повторов на вариант |
 | `--base-url` | `https://cdntest.wamba.com` | Базовый URL |
 | `--browser` | chromium | Браузер (chromium/firefox/webkit) |
 | `--headless` | true | Headless режим |

@@ -436,7 +436,7 @@ yargs(hideBin(process.argv))
     "Run CDN benchmark",
     (y) => y
       .option("base-url", { type: "string", default: "https://cdntest.wamba.com", describe: "Base URL" })
-      .option("repeats", { type: "number", default: 3, describe: "Repeats per variant" })
+      .option("repeats", { type: "number", default: 100, describe: "Repeats per variant" })
       .option("browser", { type: "string", default: "chromium", choices: ["chromium", "firefox", "webkit"] })
       .option("headless", { type: "string", default: "true", describe: "Headless mode" })
       .option("timeout-ms", { type: "number", default: 60000, describe: "Timeout per run" })
@@ -458,7 +458,7 @@ yargs(hideBin(process.argv))
     "Benchmark single image URL",
     (y) => y
       .positional("url", { type: "string", describe: "Image URL" })
-      .option("repeats", { type: "number", default: 20 })
+      .option("repeats", { type: "number", default: 100 })
       .option("browser", { type: "string", default: "chromium", choices: ["chromium", "firefox", "webkit"] })
       .option("headless", { type: "string", default: "true" })
       .option("timeout-ms", { type: "number", default: 30000 })
@@ -473,7 +473,7 @@ yargs(hideBin(process.argv))
     "Benchmark list of URLs",
     (y) => y
       .option("urls", { type: "string", demandOption: true, describe: "HTTP URL to text file with URLs" })
-      .option("repeats", { type: "number", default: 20 })
+      .option("repeats", { type: "number", default: 100 })
       .option("timeout-ms", { type: "number", default: 30000 })
       .option("delay-ms", { type: "number", default: 0 })
       .option("cache-bust", { type: "boolean", default: false, describe: "Append nocache param (disables CDN cache)" })
