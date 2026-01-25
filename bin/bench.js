@@ -137,6 +137,10 @@ async function cmdRun(args) {
   const csvPath = path.join(outputDir, `${runId}.csv`);
 
   const rawRecords = [];
+  const meta = {
+    city: declaredCity,
+    city_geo: cityGeo,
+  };
 
   // Launch browser
   const browserType = getBrowserType(browserName);
@@ -188,6 +192,8 @@ async function cmdRun(args) {
             ttfb_ms: runData.ttfbMs,
             timeout: runData.timeout,
             errors_count: runData.errorsCount,
+            city: declaredCity,
+            city_geo: cityGeo,
           };
           rawRecords.push(record);
 
@@ -211,7 +217,7 @@ async function cmdRun(args) {
   }
 
   // Save CSV report
-  await saveReport({ outputPath: csvPath, records: rawRecords });
+  await saveReport({ outputPath: csvPath, records: rawRecords, meta });
   console.log(`\nSaved: ${csvPath}`);
 
   // Upload to S3
@@ -254,6 +260,10 @@ async function cmdImage(args) {
   const delayMs = Number(args["delay-ms"]) || 0;
   const cacheBust = parseBool(args["cache-bust"]);
   const verbose = parseBool(args.verbose);
+
+  const configCity = toNonEmptyString(config.city);
+  const cliCity = toNonEmptyString(args.city);
+  const declaredCity = cliCity || configCity || null;
 
   const autoCity = parseBool(args["auto-city"]);
   let cityGeo = null;
@@ -309,13 +319,21 @@ async function cmdImage(args) {
   }
 
   const stats = computeImageStats(rawRecords);
-  console.log(`\nimage total: mean ${formatMs(stats.total_mean_ms)} p50 ${formatMs(stats.total_p50_ms)} p95 ${formatMs(stats.total_p95_ms)} stddev ${formatMs(stats.total_stddev_ms)}`);
-  console.log(`image ttfb:  mean ${formatMs(stats.ttfb_mean_ms)} p50 ${formatMs(stats.ttfb_p50_ms)} p95 ${formatMs(stats.ttfb_p95_ms)}`);
+  const cityNote = `city ${declaredCity || "n/a"} geo ${cityGeo || "n/a"}`;
+  console.log(
+    `\nimage total: mean ${formatMs(stats.total_mean_ms)} p50 ${formatMs(stats.total_p50_ms)} p95 ${formatMs(stats.total_p95_ms)} stddev ${formatMs(stats.total_stddev_ms)} (${cityNote})`
+  );
+  console.log(
+    `image ttfb:  mean ${formatMs(stats.ttfb_mean_ms)} p50 ${formatMs(stats.ttfb_p50_ms)} p95 ${formatMs(stats.ttfb_p95_ms)} (${cityNote})`
+  );
 
   // Save simple CSV
-  const header = "run,total_ms,ttfb_ms,errors";
-  const lines = rawRecords.map((r, i) => `${i + 1},${r.total_ms ?? ""},${r.ttfb_ms ?? ""},${r.errors_count}`);
-  const summary = `TOTAL,${stats.total_p50_ms ?? ""},${stats.ttfb_p50_ms ?? ""},${stats.errors}`;
+  const header = "run,total_ms,ttfb_ms,errors,city,city_geo";
+  const lines = rawRecords.map(
+    (r, i) =>
+      `${i + 1},${r.total_ms ?? ""},${r.ttfb_ms ?? ""},${r.errors_count},${declaredCity ?? ""},${cityGeo ?? ""}`
+  );
+  const summary = `TOTAL,${stats.total_p50_ms ?? ""},${stats.ttfb_p50_ms ?? ""},${stats.errors},${declaredCity ?? ""},${cityGeo ?? ""}`;
   await fs.promises.writeFile(csvPath, [header, ...lines, summary].join("\n"));
   console.log(`Saved: ${csvPath}`);
 }
@@ -332,9 +350,15 @@ async function cmdUrls(args) {
   const cacheBust = parseBool(args["cache-bust"]);
   const verbose = parseBool(args.verbose);
 
+  const configCity = toNonEmptyString(config.city);
+  const cliCity = toNonEmptyString(args.city);
+  const declaredCity = cliCity || configCity || null;
+
   const autoCity = parseBool(args["auto-city"]);
+  let cityGeo = null;
   if (autoCity) {
     const detected = await detectCity(3000);
+    cityGeo = detected.city;
     if (verbose) {
       console.log(`Auto geo: ${detected.city || "n/a"}${detected.ip ? ` ip ${detected.ip}` : ""}`);
     }
@@ -372,7 +396,7 @@ async function cmdUrls(args) {
   }
 
   // Per-URL stats
-  const header = "url,total_mean,total_p50,total_p95,ttfb_mean,ok,errors";
+  const header = "url,total_mean,total_p50,total_p95,ttfb_mean,ok,errors,city,city_geo";
   const lines = urls.map((url) => {
     const entries = rawRecords.filter((r) => r.url === url);
     const totalValues = entries.map((r) => r.total_ms).filter((v) => v != null);
@@ -388,6 +412,8 @@ async function cmdUrls(args) {
       ttfbValues.length ? Math.round(mean(ttfbValues)) : "",
       ok,
       errors,
+      declaredCity ?? "",
+      cityGeo ?? "",
     ].join(",");
   });
 

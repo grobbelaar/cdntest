@@ -119,6 +119,8 @@ timestamp,page_id,variant,run,images_ms,avg_img_ms,ttfb_ms,...
 
 Колонки TOTAL: `origin_median`, `origin_p90`, `origin_avg_img`, `cdn_median`, `cdn_p90`, `cdn_avg_img`, `improvement_%`, `improvement_p90_%`
 
+В CSV также есть `city` (указанный в CLI/конфиге) и `city_geo` (определённый по IP).
+
 ---
 
 ## Сравнение скриптов
