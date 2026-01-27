@@ -24,38 +24,7 @@ node bin/bench.js run
 
 ## Скрипты
 
-### 1. cdn-compare.sh — curl-бенчмарк одного изображения
-
-Простой скрипт на bash, измеряет чистое сетевое время загрузки одного изображения через curl.
-
-**Алгоритм:**
-
-1. Берёт два URL: CDN (`media.mamba.ru`) и origin (`photo*.wambacdn.net`)
-2. Делает N запросов (по умолчанию 100) к каждому URL
-3. Для каждого запроса curl измеряет:
-   - `time_total` — полное время загрузки
-   - `time_starttransfer` (TTFB) — время до первого байта
-   - `time_namelookup`, `time_connect`, `time_appconnect` — DNS, TCP, TLS
-4. Агрегирует: mean, p50, p95, p99, max
-5. Выводит improvement CDN vs origin
-
-**Запуск:**
-
-```bash
-./bin/cdn-compare.sh
-```
-
-**Результат:** `cdn.csv`, `origin.csv` + summary в консоль
-
-**Особенности:**
-
-- Чистое сетевое время без overhead браузера
-- Показывает максимальный теоретический выигрыш CDN
-- Один файл — видно влияние bandwidth
-
----
-
-### 2. bench.js — браузерный бенчмарк страницы с изображениями
+### bench.js — браузерный бенчмарк страницы с изображениями
 
 Node.js скрипт с Playwright, измеряет время загрузки всех изображений на странице в реальном браузере.
 
@@ -122,6 +91,40 @@ timestamp,page_id,variant,run,images_ms,avg_img_ms,ttfb_ms,...
 В CSV также есть `city` (указанный в CLI/конфиге) и `city_geo` (определённый по IP).
 
 ---
+
+
+### cdn-compare.sh — curl-бенчмарк одного изображения
+
+Простой скрипт на bash, измеряет чистое сетевое время загрузки одного изображения через curl.
+
+**Алгоритм:**
+
+1. Берёт два URL: CDN (`media.mamba.ru`) и origin (`photo*.wambacdn.net`)
+2. Делает N запросов (по умолчанию 100) к каждому URL
+3. Для каждого запроса curl измеряет:
+   - `time_total` — полное время загрузки
+   - `time_starttransfer` (TTFB) — время до первого байта
+   - `time_namelookup`, `time_connect`, `time_appconnect` — DNS, TCP, TLS
+4. Агрегирует: mean, p50, p95, p99, max
+5. Выводит improvement CDN vs origin
+
+**Запуск:**
+
+```bash
+./bin/cdn-compare.sh
+```
+
+**Результат:** `cdn.csv`, `origin.csv` + summary в консоль
+
+**Особенности:**
+
+- Чистое сетевое время без overhead браузера
+- Показывает максимальный теоретический выигрыш CDN
+- Один файл — видно влияние bandwidth
+
+---
+
+
 
 ## Сравнение скриптов
 
