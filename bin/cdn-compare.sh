@@ -4,7 +4,7 @@ set -euo pipefail
 CDN_URL="$(cat ../urls.txt |grep media |shuf -n1)"
 ORIGIN_URL="$(echo $CDN_URL |sed -e 's/media.mamba.ru/photo1.wambacdn.net/')"
 
-N="50"
+N="20"
 
 OUT_CDN="cdn.csv"
 OUT_ORIGIN="origin.csv"
@@ -13,6 +13,7 @@ sep_for() { [[ "$1" == *\?* ]] && echo "&" || echo "?"; }
 rand() { printf "%s%06d" "$(date +%s)" "$RANDOM"; }
 
 curl_metrics() {
+  sleep 2
   curl -o /dev/null -sS --compressed --http2 \
     --connect-timeout 5 --max-time 30 \
     -w "%{http_code}|%{remote_ip}|%{local_ip}|%{http_version}|%{ssl_verify_result}|%{content_type}|%{size_download}|%{speed_download}|%{time_namelookup}|%{time_connect}|%{time_appconnect}|%{time_pretransfer}|%{time_starttransfer}|%{time_total}" \
