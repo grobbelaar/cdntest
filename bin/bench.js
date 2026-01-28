@@ -165,6 +165,8 @@ async function cmdRun(args) {
   const csvPath = path.join(outputDir, `${runId}.csv`);
 
   const rawRecords = [];
+  const discoveredImageUrls = new Set();
+  const failedImageUrls = new Set();
   const meta = {
     city: declaredCity,
     city_geo: cityGeo,
@@ -206,6 +208,19 @@ async function cmdRun(args) {
             verbose: false,
             logPrefix,
           });
+          if (runData.imageUrls && runData.imageUrls.length > 0) {
+            for (const imageUrl of runData.imageUrls) {
+              if (!failedImageUrls.has(imageUrl)) {
+                discoveredImageUrls.add(imageUrl);
+              }
+            }
+          }
+          if (runData.imageFailedUrls && runData.imageFailedUrls.length > 0) {
+            for (const failedUrl of runData.imageFailedUrls) {
+              failedImageUrls.add(failedUrl);
+              discoveredImageUrls.delete(failedUrl);
+            }
+          }
 
           const record = {
             timestamp_iso: new Date().toISOString(),
@@ -247,6 +262,11 @@ async function cmdRun(args) {
   // Save CSV report
   await saveReport({ outputPath: csvPath, records: rawRecords, meta });
   console.log(`\nSaved: ${csvPath}`);
+
+  const urlsPath = path.join(process.cwd(), "urls.txt");
+  const urlsList = Array.from(discoveredImageUrls).sort();
+  await fs.promises.writeFile(urlsPath, `${urlsList.join("\n")}\n`);
+  console.log(`Saved: ${urlsPath}`);
 
   // Upload to S3
   if (s3Bucket && s3AccessKeyId && s3SecretAccessKey) {

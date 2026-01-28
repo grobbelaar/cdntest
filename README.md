@@ -78,6 +78,8 @@ node bin/bench.js urls --urls https://example.com/urls.txt
 
 **Формат результата:** `results/<timestamp>.csv`
 
+Также после `run` сохраняется `urls.txt` (список изображений, без упавших).
+
 ```csv
 timestamp,page_id,variant,run,images_ms,avg_img_ms,ttfb_ms,...
 2026-01-24T15:14:48Z,page1,origin,1,404,146,87,...
