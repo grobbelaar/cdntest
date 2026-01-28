@@ -124,6 +124,8 @@ S3 параметры и другие чувствительные значен�
 
 - `CDNTEST_BASE_URL`
 - `CDNTEST_OUTPUT_DIR`
+- `CDNTEST_CITY`
+- `CDNTEST_CITY_GEO`
 - `CDNTEST_S3_BUCKET`
 - `CDNTEST_S3_PREFIX`
 - `CDNTEST_S3_ENDPOINT`
@@ -152,10 +154,13 @@ S3 параметры и другие чувствительные значен�
 **Запуск:**
 
 ```bash
-./bin/cdn-compare.sh
+./bin/cdn-compare.sh <city>
+# или
+CDNTEST_CITY=<city> ./bin/cdn-compare.sh
 ```
 
-**Результат:** `cdn.csv`, `origin.csv` + summary в консоль
+**Результат:** `cmp-<timestamp>.csv` (один файл с origin+cdn) + summary в консоль.  
+Если заданы `CDNTEST_S3_*` в `.env`, CSV автоматически загружается в S3.
 
 **Особенности:**
 
