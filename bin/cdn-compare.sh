@@ -63,7 +63,9 @@ ORIGIN_URL="$(echo "${CDN_URL}" | sed -e 's/media.mamba.ru/photo1.wambacdn.net/'
 N="${REPEATS}"
 
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
-OUT_FILE="${ROOT_DIR}/cmp-${RUN_ID}.csv"
+OUT_DIR="${ROOT_DIR}/results"
+mkdir -p "${OUT_DIR}"
+OUT_FILE="${OUT_DIR}/cmp-${RUN_ID}.csv"
 TMP_CDN_TOTAL="$(mktemp)"
 TMP_CDN_TTFB="$(mktemp)"
 TMP_ORIGIN_TOTAL="$(mktemp)"
