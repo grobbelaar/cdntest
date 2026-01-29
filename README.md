@@ -126,6 +126,7 @@ S3 параметры и другие чувствительные значен�
 - `CDNTEST_OUTPUT_DIR`
 - `CDNTEST_CITY`
 - `CDNTEST_CITY_GEO`
+- `CDNTEST_REPEATS`
 - `CDNTEST_S3_BUCKET`
 - `CDNTEST_S3_PREFIX`
 - `CDNTEST_S3_ENDPOINT`
@@ -154,7 +155,9 @@ S3 параметры и другие чувствительные значен�
 **Запуск:**
 
 ```bash
-./bin/cdn-compare.sh <city>
+./bin/cdn-compare.sh [city] [repeats]
+# или
+./bin/cdn-compare.sh --repeats 10
 # или
 CDNTEST_CITY=<city> ./bin/cdn-compare.sh
 ```

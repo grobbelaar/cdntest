@@ -18,6 +18,41 @@ if [[ ! -f "${URLS_FILE}" ]]; then
   exit 1
 fi
 
+POSITIONAL=()
+REPEATS=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repeats)
+      REPEATS="${2:-}"; shift 2;;
+    --repeats=*)
+      REPEATS="${1#*=}"; shift;;
+    -n)
+      REPEATS="${2:-}"; shift 2;;
+    --)
+      shift; POSITIONAL+=("$@"); break;;
+    -*)
+      echo "Unknown option: $1"; exit 1;;
+    *)
+      POSITIONAL+=("$1"); shift;;
+  esac
+done
+
+CITY="${POSITIONAL[0]:-${CDNTEST_CITY:-}}"
+CITY_GEO="${CDNTEST_CITY_GEO:-}"
+if [[ -n "${POSITIONAL[1]:-}" && -z "${REPEATS}" ]]; then
+  REPEATS="${POSITIONAL[1]}"
+fi
+CITY="${CITY:-n/a}"
+CITY_GEO="${CITY_GEO:-n/a}"
+
+if [[ -z "${REPEATS}" ]]; then
+  REPEATS="${CDNTEST_REPEATS:-20}"
+fi
+if ! [[ "${REPEATS}" =~ ^[0-9]+$ ]] || [[ "${REPEATS}" -le 0 ]]; then
+  echo "Invalid repeats: ${REPEATS}"
+  exit 1
+fi
+
 CDN_URL="$(grep media "${URLS_FILE}" | shuf -n1)"
 if [[ -z "${CDN_URL}" ]]; then
   echo "No media.mamba.ru URLs in ${URLS_FILE}"
@@ -25,7 +60,7 @@ if [[ -z "${CDN_URL}" ]]; then
 fi
 ORIGIN_URL="$(echo "${CDN_URL}" | sed -e 's/media.mamba.ru/photo1.wambacdn.net/')"
 
-N="20"
+N="${REPEATS}"
 
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
 OUT_FILE="${ROOT_DIR}/cmp-${RUN_ID}.csv"
@@ -34,13 +69,6 @@ TMP_CDN_TTFB="$(mktemp)"
 TMP_ORIGIN_TOTAL="$(mktemp)"
 TMP_ORIGIN_TTFB="$(mktemp)"
 trap 'rm -f "$TMP_CDN_TOTAL" "$TMP_CDN_TTFB" "$TMP_ORIGIN_TOTAL" "$TMP_ORIGIN_TTFB"' EXIT
-
-CITY="${1:-${CDNTEST_CITY:-}}"
-CITY_GEO="${CDNTEST_CITY_GEO:-}"
-if [[ -z "${CITY}" ]]; then
-  echo "CITY is required. Usage: $0 <city> (or set CDNTEST_CITY)"
-  exit 1
-fi
 
 sep_for() { [[ "$1" == *\?* ]] && echo "&" || echo "?"; }
 rand() { printf "%s%06d" "$(date +%s)" "$RANDOM"; }
