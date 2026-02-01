@@ -57,7 +57,7 @@ node bin/bench.js run
 node bin/bench.js run --repeats 10
 
 # Бенчмарк одного изображения
-node bin/bench.js image https://media.mamba.ru/path/to/image.jpg
+node bin/bench.js image https://%CDNHOST%/path/to/image.jpg
 
 # Бенчмарк списка URL
 node bin/bench.js urls --urls https://example.com/urls.txt
@@ -143,7 +143,8 @@ S3 параметры и другие чувствительные значен�
 
 **Алгоритм:**
 
-1. Берёт два URL: CDN (`media.mamba.ru`) и origin (`photo*.wambacdn.net`)
+1. Берёт два URL: CDN и origin
+   - Хосты можно переопределить через `CDNTEST_CDN_HOST` и `CDNTEST_ORIGIN_HOST`
 2. Делает N запросов (по умолчанию 100) к каждому URL
 3. Для каждого запроса curl измеряет:
     - `time_total` — полное время загрузки
@@ -156,6 +157,8 @@ S3 параметры и другие чувствительные значен�
 
 ```bash
 ./bin/cdn-compare.sh [city] [repeats]
+# с кастомным списком URL
+./bin/cdn-compare.sh --urls ./urls.txt
 # или
 ./bin/cdn-compare.sh --repeats 10
 # или

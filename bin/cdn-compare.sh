@@ -12,20 +12,21 @@ if [[ -f "${ENV_FILE}" ]]; then
   set +a
 fi
 
-URLS_FILE="${ROOT_DIR}/urls.txt"
-if [[ ! -f "${URLS_FILE}" ]]; then
-  echo "urls.txt not found: ${URLS_FILE}"
-  exit 1
-fi
-
 POSITIONAL=()
 REPEATS=""
+URLS_FILE=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repeats)
       REPEATS="${2:-}"; shift 2;;
     --repeats=*)
       REPEATS="${1#*=}"; shift;;
+    --urls)
+      URLS_FILE="${2:-}"; shift 2;;
+    --urls=*)
+      URLS_FILE="${1#*=}"; shift;;
+    -u)
+      URLS_FILE="${2:-}"; shift 2;;
     -n)
       REPEATS="${2:-}"; shift 2;;
     --)
@@ -36,6 +37,14 @@ while [[ $# -gt 0 ]]; do
       POSITIONAL+=("$1"); shift;;
   esac
 done
+
+if [[ -z "${URLS_FILE}" ]]; then
+  URLS_FILE="${ROOT_DIR}/urls.txt"
+fi
+if [[ ! -f "${URLS_FILE}" ]]; then
+  echo "urls.txt not found: ${URLS_FILE}"
+  exit 1
+fi
 
 CITY="${POSITIONAL[0]:-${CDNTEST_CITY:-}}"
 CITY_GEO="${CDNTEST_CITY_GEO:-}"
@@ -53,12 +62,16 @@ if ! [[ "${REPEATS}" =~ ^[0-9]+$ ]] || [[ "${REPEATS}" -le 0 ]]; then
   exit 1
 fi
 
-CDN_URL="$(grep media "${URLS_FILE}" | shuf -n1)"
-if [[ -z "${CDN_URL}" ]]; then
-  echo "No media.mamba.ru URLs in ${URLS_FILE}"
+CDN_HOST="${CDNTEST_CDN_HOST:-rucdn.mamba.ru}"
+ORIGIN_HOST="${CDNTEST_ORIGIN_HOST:-photo1.wambacdn.net}"
+
+BASE_URL="$(grep -v '^[[:space:]]*#' "${URLS_FILE}" | sed -e '/^[[:space:]]*$/d' | shuf -n1)"
+if [[ -z "${BASE_URL}" ]]; then
+  echo "No URLs in ${URLS_FILE}"
   exit 1
 fi
-ORIGIN_URL="$(echo "${CDN_URL}" | sed -e 's/media.mamba.ru/photo1.wambacdn.net/')"
+CDN_URL="$(echo "${BASE_URL}" | sed -E "s#^(https?://)[^/]+#\\1${CDN_HOST}#")"
+ORIGIN_URL="$(echo "${BASE_URL}" | sed -E "s#^(https?://)[^/]+#\\1${ORIGIN_HOST}#")"
 
 N="${REPEATS}"
 
@@ -78,10 +91,16 @@ iso_now() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 
 curl_metrics() {
   sleep 2
-  curl -o /dev/null -sS --compressed --http2 \
+  local out=""
+  out="$(curl -o /dev/null -sS --compressed --http2 \
     --connect-timeout 5 --max-time 30 \
-    -w "%{http_code}|%{remote_ip}|%{local_ip}|%{http_version}|%{ssl_verify_result}|%{content_type}|%{size_download}|%{speed_download}|%{time_namelookup}|%{time_connect}|%{time_appconnect}|%{time_pretransfer}|%{time_starttransfer}|%{time_total}|%{errormsg}" \
-    "$1" || true
+    -w "%{http_code}|%{remote_ip}|%{local_ip}|%{http_version}|%{ssl_verify_result}|%{content_type}|%{size_download}|%{speed_download}|%{time_namelookup}|%{time_connect}|%{time_appconnect}|%{time_pretransfer}|%{time_starttransfer}|%{time_total}" \
+    "$1" || true)"
+  if [[ -z "${out// }" ]]; then
+    echo ""
+    return
+  fi
+  echo "${out}|-"
 }
 
 write_header() {
@@ -278,7 +297,6 @@ const endpoint = process.env.CDNTEST_S3_ENDPOINT || "";
 const region = process.env.CDNTEST_S3_REGION || defaultS3Region(endpoint);
 const accessKeyId = process.env.CDNTEST_S3_ACCESS_KEY_ID;
 const secretAccessKey = process.env.CDNTEST_S3_SECRET_ACCESS_KEY;
-const runId = process.env.CDNTEST_RUN_ID || "run";
 const files = (process.env.CDNTEST_UPLOAD_FILES || "").split(",").filter(Boolean);
 
 if (!bucket || !accessKeyId || !secretAccessKey) {
@@ -289,7 +307,7 @@ if (!bucket || !accessKeyId || !secretAccessKey) {
 const cleanPrefix = prefix.replace(/^\/+|\/+$/g, "");
 const keyFor = (file) => {
   const name = path.basename(file);
-  return cleanPrefix ? `${cleanPrefix}/${runId}/${name}` : `${runId}/${name}`;
+  return cleanPrefix ? `${cleanPrefix}/${name}` : `${name}`;
 };
 
 (async () => {
